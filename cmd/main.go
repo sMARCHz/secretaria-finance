@@ -15,17 +15,19 @@ import (
 )
 
 func main() {
+	// Setting up
 	zapLog := logger.NewZapLogger()
 	logger.Init(zapLog.Sugar())
 
-	config := config.LoadConfig(".")
+	config.LoadConfig()
 
-	db, closeDBConnection := createDBConnection(config.DB)
+	db, closeDBConnection := createDBConnection()
 
+	// Starting server
 	stopCh := make(chan os.Signal, 1)
 	signal.Notify(stopCh, syscall.SIGINT, syscall.SIGTERM)
 
-	grpcServer, shutdown := grpc.NewGRPCServer(config.App, db)
+	grpcServer, shutdown := grpc.NewGRPCServer(db)
 	go func() {
 		grpcServer.Start()
 	}()
@@ -38,9 +40,10 @@ func main() {
 	logger.Info("Gracefully shutting down...")
 }
 
-func createDBConnection(config config.DatabaseConfiguration) (*sqlx.DB, func()) {
-	datasourceName := fmt.Sprintf("postgresql://%v:%v@%v:%v/%v?sslmode=%v", config.Username, config.Password, config.Host, config.Port, config.DBName, config.SSLMode)
-	db, err := sqlx.Open(config.Driver, datasourceName)
+func createDBConnection() (*sqlx.DB, func()) {
+	cfg := config.Get().DB
+	datasourceName := fmt.Sprintf("postgresql://%v:%v@%v:%v/%v?sslmode=%v", cfg.Username, cfg.Password, cfg.Host, cfg.Port, cfg.DBName, cfg.SSLMode)
+	db, err := sqlx.Open(cfg.Driver, datasourceName)
 	if err != nil {
 		logger.Fatal("cannot connect to database: ", err)
 	}

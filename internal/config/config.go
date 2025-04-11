@@ -7,6 +7,8 @@ import (
 	"github.com/spf13/viper"
 )
 
+var defaultConfig *Configuration
+
 type Configuration struct {
 	App AppConfiguration
 	DB  DatabaseConfiguration
@@ -26,13 +28,20 @@ type DatabaseConfiguration struct {
 	SSLMode  string
 }
 
-func LoadConfig(path string) Configuration {
-	viper.AddConfigPath(path)
+func Get() *Configuration {
+	if defaultConfig == nil {
+		LoadConfig()
+	}
+	return defaultConfig
+}
+
+func LoadConfig() {
+	viper.AddConfigPath(".")
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
-
 	viper.AutomaticEnv()
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+
 	if err := viper.BindEnv("db.password", "DB_PASSWORD"); err != nil {
 		logger.Fatal("failed to bind environment variable: ", err)
 	}
@@ -41,9 +50,10 @@ func LoadConfig(path string) Configuration {
 		logger.Fatal("failed to load configuration: ", err)
 	}
 
-	var configuration Configuration
+	var configuration *Configuration
 	if err := viper.Unmarshal(&configuration); err != nil {
 		logger.Fatal("failed to unmarshal configuration: ", err)
 	}
-	return configuration
+
+	defaultConfig = configuration
 }

@@ -3,7 +3,7 @@ services:
   app:
     build: 
       context: .
-    container_name: app
+    container_name: secretaria-finance-app
     volumes:
       - ./logs:/var/log/secretaria
     ports:

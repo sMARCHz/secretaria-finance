@@ -5,7 +5,7 @@ import (
 	"net"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/sMARCHz/go-secretaria-finance/internal/adapters/driven/db"
+	"github.com/sMARCHz/go-secretaria-finance/internal/adapters/driven/db/postgres"
 	"github.com/sMARCHz/go-secretaria-finance/internal/adapters/driving/grpc/pb"
 	"github.com/sMARCHz/go-secretaria-finance/internal/config"
 	"github.com/sMARCHz/go-secretaria-finance/internal/core/services"
@@ -33,7 +33,7 @@ func (g GRPCServer) Start() {
 	}
 
 	// Register service to grpc server
-	repo := db.NewFinanceRepository(g.database)
+	repo := postgres.NewFinanceRepository(g.database)
 	service := services.NewFinanceService(repo)
 	pb.RegisterFinanceServiceServer(g.server, newFinanceServiceServer(service))
 

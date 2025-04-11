@@ -5,12 +5,11 @@ services:
       context: .
     container_name: app
     volumes:
-      - ./:/app
+      - ./logs:/var/log/secretaria
     ports:
       - "8080:8080"
     env_file: ./secret.env
-    command: reflex -r '(\.go$$)' -s go run cmd/main.go
-    
+
   postgres:
     image: postgres:14
     restart: always

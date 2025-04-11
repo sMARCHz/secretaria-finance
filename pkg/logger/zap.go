@@ -11,7 +11,8 @@ func NewZapLogger() *zap.Logger {
 	encoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
 	config := zap.NewProductionConfig()
 	config.EncoderConfig = encoderConfig
-	config.OutputPaths = []string{"logs/secretaria.log", "stderr"}
+	config.OutputPaths = []string{"/var/log/secretaria/app.log", "stdout"}
+	config.ErrorOutputPaths = []string{"stderr"}
 
 	log, err := config.Build()
 	if err != nil {

@@ -25,13 +25,11 @@ type financeService struct {
 }
 
 func NewFinanceService(repo repository.FinanceRepository) FinanceService {
-	return &financeService{
-		repository: repo,
-	}
+	return &financeService{repo}
 }
 
 func (f *financeService) Withdraw(req dto.TransactionRequest) (*dto.TransactionResponse, *errors.AppError) {
-	categoryID, err := f.repository.GetCategoryIDByAbbrNameAndTransactionType(req.Category, "WITHDRAW")
+	categoryID, err := f.repository.GetCategoryIDByAbbrNameAndTransactionType(req.Category, repository.TransactionTypeWithdraw)
 	if err != nil {
 		return nil, err
 	}
@@ -40,14 +38,14 @@ func (f *financeService) Withdraw(req dto.TransactionRequest) (*dto.TransactionR
 	if err != nil {
 		return nil, err
 	}
+
 	if account.Balance < req.Amount {
-		logger.Error("account's balance is less than withdrawal amount")
 		return nil, errors.UnprocessableEntityServerError("balance can't be less than the withdrawal amount")
 	}
 
 	transaction := domain.TransactionInput{
 		AccountID:   account.AccountID,
-		CategoryID:  *categoryID,
+		CategoryID:  categoryID,
 		Description: req.Description,
 		Amount:      -req.Amount,
 	}
@@ -55,11 +53,12 @@ func (f *financeService) Withdraw(req dto.TransactionRequest) (*dto.TransactionR
 	if err != nil {
 		return nil, err
 	}
+
 	return account.ToTransactionResponseDto(), nil
 }
 
 func (f *financeService) Deposit(req dto.TransactionRequest) (*dto.TransactionResponse, *errors.AppError) {
-	categoryID, err := f.repository.GetCategoryIDByAbbrNameAndTransactionType(req.Category, "DEPOSIT")
+	categoryID, err := f.repository.GetCategoryIDByAbbrNameAndTransactionType(req.Category, repository.TransactionTypeDeposit)
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +70,7 @@ func (f *financeService) Deposit(req dto.TransactionRequest) (*dto.TransactionRe
 
 	transaction := domain.TransactionInput{
 		AccountID:   account.AccountID,
-		CategoryID:  *categoryID,
+		CategoryID:  categoryID,
 		Description: req.Description,
 		Amount:      req.Amount,
 	}
@@ -79,6 +78,7 @@ func (f *financeService) Deposit(req dto.TransactionRequest) (*dto.TransactionRe
 	if err != nil {
 		return nil, err
 	}
+
 	return account.ToTransactionResponseDto(), nil
 }
 
@@ -87,12 +87,13 @@ func (f *financeService) Transfer(req dto.TransferRequest) (*dto.TransferRespons
 	if err != nil {
 		return nil, err
 	}
+
 	toAccount, err := f.repository.GetAccountByName(req.ToAccountName)
 	if err != nil {
 		return nil, err
 	}
+
 	if fromAccount.Balance < req.Amount {
-		logger.Error("from_account's balance is less than transfer amount")
 		return nil, errors.UnprocessableEntityServerError("transferer's balance can't be less than the transfer amount")
 	}
 
@@ -106,6 +107,7 @@ func (f *financeService) Transfer(req dto.TransferRequest) (*dto.TransferRespons
 	if err != nil {
 		return nil, err
 	}
+
 	return fromAccount.ToTransferResponseDto(), nil
 }
 
@@ -119,6 +121,7 @@ func (f *financeService) GetBalance() ([]dto.BalanceResponse, *errors.AppError) 
 	for i, v := range accounts {
 		responses[i] = *v.ToBalanceResponseDto()
 	}
+
 	return responses, nil
 }
 
@@ -128,6 +131,7 @@ func (f *financeService) GetOverviewStatement(req dto.GetOverviewStatementReques
 		logger.Error("failed to load time location")
 		return nil, errors.InternalServerError("failed to load time location")
 	}
+
 	from := time.Date(req.From.Year(), req.From.Month(), req.From.Day(), 0, 0, 0, 0, loc)
 	to := time.Date(req.To.Year(), req.To.Month(), req.To.Day(), 23, 59, 59, 0, loc)
 
@@ -171,6 +175,7 @@ func (f *financeService) GetOverviewStatement(req dto.GetOverviewStatementReques
 			expense.Entries = categorizedEntry
 		}
 	}
+
 	return &dto.GetOverviewStatementResponse{
 		Profit:  profit,
 		Revenue: revenue,
@@ -189,10 +194,12 @@ func (*financeService) groupEntriesByCategory(entries []domain.Entry) []dto.Cate
 			m[e.Category.Name] = dto.CategorizedEntry{Category: e.Category.Name, Amount: e.Amount}
 		}
 	}
+
 	categorizedEntries := make([]dto.CategorizedEntry, 0)
 	for _, v := range m {
 		categorizedEntries = append(categorizedEntries, v)
 	}
+
 	return categorizedEntries
 }
 

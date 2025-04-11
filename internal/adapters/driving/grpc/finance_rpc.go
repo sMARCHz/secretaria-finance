@@ -22,7 +22,7 @@ func newFinanceServiceServer(service services.FinanceService) *financeServiceSer
 }
 
 func (f *financeServiceServer) Withdraw(ctx context.Context, r *pb.TransactionRequest) (*pb.TransactionResponse, error) {
-	req := dto.TransactionRequest{
+	req := &dto.TransactionRequest{
 		AccountName: r.AccountName,
 		Category:    r.Category,
 		Description: r.Description,
@@ -39,7 +39,7 @@ func (f *financeServiceServer) Withdraw(ctx context.Context, r *pb.TransactionRe
 }
 
 func (f *financeServiceServer) Deposit(ctx context.Context, r *pb.TransactionRequest) (*pb.TransactionResponse, error) {
-	req := dto.TransactionRequest{
+	req := &dto.TransactionRequest{
 		AccountName: r.AccountName,
 		Category:    r.Category,
 		Description: r.Description,
@@ -56,7 +56,7 @@ func (f *financeServiceServer) Deposit(ctx context.Context, r *pb.TransactionReq
 }
 
 func (f *financeServiceServer) Transfer(ctx context.Context, r *pb.TransferRequest) (*pb.TransferResponse, error) {
-	req := dto.TransferRequest{
+	req := &dto.TransferRequest{
 		FromAccountName: r.FromAccountName,
 		ToAccountName:   r.ToAccountName,
 		Description:     r.Description,
@@ -86,11 +86,13 @@ func (f *financeServiceServer) GetBalance(ctx context.Context, r *emptypb.Empty)
 			Error:  err.Message,
 		}, utils.ConvertHttpErrToGRPC(err)
 	}
+
+	// TODO: Fix this
 	return &pb.GetBalanceResponse{Accounts: accountsBalance}, nil
 }
 
 func (f *financeServiceServer) GetOverviewStatement(ctx context.Context, r *pb.OverviewStatementRequest) (*pb.OverviewStatementResponse, error) {
-	req := dto.GetOverviewStatementRequest{
+	req := &dto.GetOverviewStatementRequest{
 		From: r.From.AsTime(),
 		To:   r.To.AsTime(),
 	}

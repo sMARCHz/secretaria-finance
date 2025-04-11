@@ -17,8 +17,8 @@ var statusCodeMap = map[int]codes.Code{
 }
 
 func ConvertHttpErrToGRPC(appError *errors.AppError) error {
-	statusCode, present := statusCodeMap[appError.StatusCode]
-	if !present {
+	statusCode, exist := statusCodeMap[appError.StatusCode]
+	if !exist {
 		logger.Errorf("appError status code['%v'] isn't in the map", appError.StatusCode)
 		statusCode = codes.Internal
 	}

@@ -1,6 +1,7 @@
 package dto
 
 import (
+	"net/http"
 	"time"
 
 	"github.com/sMARCHz/go-secretaria-finance/internal/adapters/driving/grpc/pb"
@@ -20,6 +21,7 @@ type TransactionResponse struct {
 
 func (t TransactionResponse) ToProto() *pb.TransactionResponse {
 	response := pb.TransactionResponse{
+		Status:      http.StatusOK,
 		AccountName: t.AccountName,
 		Balance:     t.Balance,
 	}
@@ -40,6 +42,7 @@ type TransferResponse struct {
 
 func (t TransferResponse) ToProto() *pb.TransferResponse {
 	response := pb.TransferResponse{
+		Status:          http.StatusOK,
 		FromAccountName: t.FromAccountName,
 		Balance:         t.FromAccountBalance,
 	}

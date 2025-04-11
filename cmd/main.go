@@ -20,7 +20,7 @@ var (
 )
 
 func main() {
-	logger := logger.NewProductionLogger()
+	logger := logger.New()
 	config := config.LoadConfig(logger, ".")
 
 	// create database connection

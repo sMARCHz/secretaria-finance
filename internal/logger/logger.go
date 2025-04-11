@@ -23,8 +23,8 @@ type logger struct {
 	*zap.SugaredLogger
 }
 
-func NewProductionLogger() Logger {
-	logger := NewZapProduction()
+func New() Logger {
+	logger := newZapProduction()
 	return NewWithZap(logger)
 }
 
@@ -32,7 +32,7 @@ func NewWithZap(l *zap.Logger) Logger {
 	return &logger{l.Sugar()}
 }
 
-func NewZapProduction() *zap.Logger {
+func newZapProduction() *zap.Logger {
 	encoderConfig := zap.NewProductionEncoderConfig()
 	encoderConfig.TimeKey = "timestamp"
 	encoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder

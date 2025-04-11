@@ -7,7 +7,7 @@ import (
 	"github.com/sMARCHz/go-secretaria-finance/internal/core/dto"
 	"github.com/sMARCHz/go-secretaria-finance/internal/core/errors"
 	"github.com/sMARCHz/go-secretaria-finance/internal/core/repository"
-	"github.com/sMARCHz/go-secretaria-finance/internal/logger"
+	"github.com/sMARCHz/go-secretaria-finance/pkg/logger"
 )
 
 type FinanceService interface {
@@ -22,13 +22,11 @@ type FinanceService interface {
 
 type financeService struct {
 	repository repository.FinanceRepository
-	logger     logger.Logger
 }
 
-func NewFinanceService(repo repository.FinanceRepository, logger logger.Logger) FinanceService {
+func NewFinanceService(repo repository.FinanceRepository) FinanceService {
 	return &financeService{
 		repository: repo,
-		logger:     logger,
 	}
 }
 
@@ -43,7 +41,7 @@ func (f *financeService) Withdraw(req dto.TransactionRequest) (*dto.TransactionR
 		return nil, err
 	}
 	if account.Balance < req.Amount {
-		f.logger.Error("account's balance is less than withdrawal amount")
+		logger.Error("account's balance is less than withdrawal amount")
 		return nil, errors.UnprocessableEntityServerError("balance can't be less than the withdrawal amount")
 	}
 
@@ -94,7 +92,7 @@ func (f *financeService) Transfer(req dto.TransferRequest) (*dto.TransferRespons
 		return nil, err
 	}
 	if fromAccount.Balance < req.Amount {
-		f.logger.Error("from_account's balance is less than transfer amount")
+		logger.Error("from_account's balance is less than transfer amount")
 		return nil, errors.UnprocessableEntityServerError("transferer's balance can't be less than the transfer amount")
 	}
 
@@ -127,7 +125,7 @@ func (f *financeService) GetBalance() ([]dto.BalanceResponse, *errors.AppError) 
 func (f *financeService) GetOverviewStatement(req dto.GetOverviewStatementRequest) (*dto.GetOverviewStatementResponse, *errors.AppError) {
 	loc, err := time.LoadLocation("Asia/Bangkok")
 	if err != nil {
-		f.logger.Error("failed to load time location")
+		logger.Error("failed to load time location")
 		return nil, errors.InternalServerError("failed to load time location")
 	}
 	from := time.Date(req.From.Year(), req.From.Month(), req.From.Day(), 0, 0, 0, 0, loc)

@@ -8,18 +8,16 @@ import (
 	"github.com/sMARCHz/go-secretaria-finance/internal/core/domain"
 	"github.com/sMARCHz/go-secretaria-finance/internal/core/errors"
 	"github.com/sMARCHz/go-secretaria-finance/internal/core/repository"
-	"github.com/sMARCHz/go-secretaria-finance/internal/logger"
+	"github.com/sMARCHz/go-secretaria-finance/pkg/logger"
 )
 
 type financeRepository struct {
-	db     *sqlx.DB
-	logger logger.Logger
+	db *sqlx.DB
 }
 
-func NewFinanceRepository(db *sqlx.DB, logger logger.Logger) repository.FinanceRepository {
+func NewFinanceRepository(db *sqlx.DB) repository.FinanceRepository {
 	return &financeRepository{
-		db:     db,
-		logger: logger,
+		db: db,
 	}
 }
 
@@ -28,10 +26,10 @@ func (f *financeRepository) GetAccountByName(name string) (*domain.Account, *err
 	err := f.db.Get(&account, "SELECT account_id, name, balance, currency, created_at FROM accounts WHERE name = $1 LIMIT 1", name)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			f.logger.Errorf("account not found where name='%v'", name)
+			logger.Errorf("account not found where name='%v'", name)
 			return nil, errors.NotFoundError("account not found")
 		}
-		f.logger.Error("failed to get accountID: ", err)
+		logger.Error("failed to get accountID: ", err)
 		return nil, errors.InternalServerError("failed to get accountID")
 	}
 	return &account, nil
@@ -42,10 +40,10 @@ func (f *financeRepository) GetCategoryIDByAbbrNameAndTransactionType(categoryAb
 	err := f.db.Get(&categoryID, "SELECT category_id FROM categories WHERE name_abbr = $1 AND transaction_type = $2 LIMIT 1", categoryAbbrName, transactionType)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			f.logger.Errorf("category not found where abbreviation='%v', transactionType='%v'", categoryAbbrName, transactionType)
+			logger.Errorf("category not found where abbreviation='%v', transactionType='%v'", categoryAbbrName, transactionType)
 			return nil, errors.NotFoundError("category not found")
 		}
-		f.logger.Error("failed to get categoryID: ", err)
+		logger.Error("failed to get categoryID: ", err)
 		return nil, errors.InternalServerError("failed to get categoryID")
 	}
 	return &categoryID, nil
@@ -54,7 +52,7 @@ func (f *financeRepository) GetCategoryIDByAbbrNameAndTransactionType(categoryAb
 func (f *financeRepository) Withdraw(t domain.TransactionInput) (*domain.Account, *errors.AppError) {
 	tx, err := f.db.Begin()
 	if err != nil {
-		f.logger.Error("failed to begin transaction: ", err)
+		logger.Error("failed to begin transaction: ", err)
 		return nil, errors.InternalServerError("failed to begin transaction")
 	}
 
@@ -62,7 +60,7 @@ func (f *financeRepository) Withdraw(t domain.TransactionInput) (*domain.Account
 	query := "INSERT INTO entries(account_id, category_id, amount, description) VALUES($1, $2, $3, $4)"
 	if _, err := tx.Exec(query, t.AccountID, t.CategoryID, t.Amount, t.Description); err != nil {
 		tx.Rollback()
-		f.logger.Error("failed to insert entries: ", err)
+		logger.Error("failed to insert entries: ", err)
 		return nil, errors.InternalServerError("failed to insert entries")
 	}
 	// Update the account's balance
@@ -70,24 +68,24 @@ func (f *financeRepository) Withdraw(t domain.TransactionInput) (*domain.Account
 	err = tx.QueryRow("UPDATE accounts SET balance = balance + $1 WHERE account_id = $2 RETURNING name, balance, currency, created_at", t.Amount, t.AccountID).Scan(&account.Name, &account.Balance, &account.Currency, &account.CreatedAt)
 	if err != nil {
 		tx.Rollback()
-		f.logger.Error("failed to update balance of account: ", err)
+		logger.Error("failed to update balance of account: ", err)
 		return nil, errors.InternalServerError("failed to update balance of account")
 	}
 
 	// Commit
 	if err := tx.Commit(); err != nil {
 		tx.Rollback()
-		f.logger.Error("failed to commit transaction: ", err)
+		logger.Error("failed to commit transaction: ", err)
 		return nil, errors.InternalServerError("failed to commit transaction")
 	}
-	f.logger.Infof("successfully withdraw ฿%v to accountID=%v", -t.Amount, t.AccountID)
+	logger.Infof("successfully withdraw ฿%v to accountID=%v", -t.Amount, t.AccountID)
 	return &account, nil
 }
 
 func (f *financeRepository) Deposit(t domain.TransactionInput) (*domain.Account, *errors.AppError) {
 	tx, err := f.db.Begin()
 	if err != nil {
-		f.logger.Error("failed to begin transaction: ", err)
+		logger.Error("failed to begin transaction: ", err)
 		return nil, errors.InternalServerError("failed to begin transaction")
 	}
 
@@ -95,7 +93,7 @@ func (f *financeRepository) Deposit(t domain.TransactionInput) (*domain.Account,
 	query := "INSERT INTO entries(account_id, category_id, amount, description) VALUES($1, $2, $3, $4)"
 	if _, err := tx.Exec(query, t.AccountID, t.CategoryID, t.Amount, t.Description); err != nil {
 		tx.Rollback()
-		f.logger.Error("failed to insert entries: ", err)
+		logger.Error("failed to insert entries: ", err)
 		return nil, errors.InternalServerError("failed to insert entries")
 	}
 	// Update the account's balance
@@ -103,24 +101,24 @@ func (f *financeRepository) Deposit(t domain.TransactionInput) (*domain.Account,
 	err = tx.QueryRow("UPDATE accounts SET balance = balance + $1 WHERE account_id = $2 RETURNING name, balance, currency, created_at", t.Amount, t.AccountID).Scan(&account.Name, &account.Balance, &account.Currency, &account.CreatedAt)
 	if err != nil {
 		tx.Rollback()
-		f.logger.Error("failed to update balance of account: ", err)
+		logger.Error("failed to update balance of account: ", err)
 		return nil, errors.InternalServerError("failed to update balance of account")
 	}
 
 	// Commit
 	if err := tx.Commit(); err != nil {
 		tx.Rollback()
-		f.logger.Error("failed to commit transaction: ", err)
+		logger.Error("failed to commit transaction: ", err)
 		return nil, errors.InternalServerError("failed to commit transaction")
 	}
-	f.logger.Infof("successfully deposit ฿%v to accountID=%v", t.Amount, t.AccountID)
+	logger.Infof("successfully deposit ฿%v to accountID=%v", t.Amount, t.AccountID)
 	return &account, nil
 }
 
 func (f *financeRepository) Transfer(t domain.TransferInput) (*domain.Account, *errors.AppError) {
 	tx, err := f.db.Begin()
 	if err != nil {
-		f.logger.Error("failed to begin transaction: ", err)
+		logger.Error("failed to begin transaction: ", err)
 		return nil, errors.InternalServerError("failed to begin transaction")
 	}
 
@@ -128,26 +126,26 @@ func (f *financeRepository) Transfer(t domain.TransferInput) (*domain.Account, *
 	var categoryID int
 	if err := tx.QueryRow("SELECT category_id FROM categories WHERE name = 'transfer' AND transaction_type = 'TRANSFER' LIMIT 1").Scan(&categoryID); err != nil {
 		tx.Rollback()
-		f.logger.Error("failed to get categoryID: ", err)
+		logger.Error("failed to get categoryID: ", err)
 		return nil, errors.InternalServerError("failed to get categoryID")
 	}
 
 	// Insert transfer
 	if _, err := tx.Exec("INSERT INTO transfers(from_account_id, to_account_id, amount) VALUES($1, $2, $3)", t.FromAccountID, t.ToAccountID, t.Amount); err != nil {
 		tx.Rollback()
-		f.logger.Error("failed to insert transfers: ", err)
+		logger.Error("failed to insert transfers: ", err)
 		return nil, errors.InternalServerError("failed to insert transfers")
 	}
 
 	// Insert entries of fromAccount and toAccount
 	if _, err := tx.Exec("INSERT INTO entries(account_id, category_id, amount, description) VALUES($1, $2, $3, $4)", t.FromAccountID, categoryID, -t.Amount, t.Description); err != nil {
 		tx.Rollback()
-		f.logger.Error("failed to insert entries: ", err)
+		logger.Error("failed to insert entries: ", err)
 		return nil, errors.InternalServerError("failed to insert entries")
 	}
 	if _, err := tx.Exec("INSERT INTO entries(account_id, category_id, amount, description) VALUES($1, $2, $3, $4)", t.ToAccountID, categoryID, t.Amount, t.Description); err != nil {
 		tx.Rollback()
-		f.logger.Error("failed to insert entries: ", err)
+		logger.Error("failed to insert entries: ", err)
 		return nil, errors.InternalServerError("failed to insert entries")
 	}
 
@@ -155,29 +153,29 @@ func (f *financeRepository) Transfer(t domain.TransferInput) (*domain.Account, *
 	var account domain.Account
 	if err := tx.QueryRow("UPDATE accounts SET balance = balance + $1 WHERE account_id = $2 RETURNING name, balance, currency, created_at", -t.Amount, t.FromAccountID).Scan(&account.Name, &account.Balance, &account.Currency, &account.CreatedAt); err != nil {
 		tx.Rollback()
-		f.logger.Error("failed to update from_account balance: ", err)
+		logger.Error("failed to update from_account balance: ", err)
 		return nil, errors.InternalServerError("failed to update from_account balance")
 	}
 	if _, err := tx.Exec("UPDATE accounts SET balance = balance + $1 WHERE account_id = $2", t.Amount, t.ToAccountID); err != nil {
 		tx.Rollback()
-		f.logger.Error("failed to update to_account balance: ", err)
+		logger.Error("failed to update to_account balance: ", err)
 		return nil, errors.InternalServerError("failed to update to_account balance")
 	}
 
 	// Commit
 	if err := tx.Commit(); err != nil {
 		tx.Rollback()
-		f.logger.Error("failed to commit transaction: ", err)
+		logger.Error("failed to commit transaction: ", err)
 		return nil, errors.InternalServerError("failed to commit transaction")
 	}
-	f.logger.Infof("successfully transfer ฿%v from accountID=%v to accountID=%v", t.Amount, t.FromAccountID, t.ToAccountID)
+	logger.Infof("successfully transfer ฿%v from accountID=%v to accountID=%v", t.Amount, t.FromAccountID, t.ToAccountID)
 	return &account, nil
 }
 
 func (f *financeRepository) GetAllAccountBalance() ([]domain.Account, *errors.AppError) {
 	var accounts []domain.Account
 	if err := f.db.Select(&accounts, "SELECT name, balance FROM accounts"); err != nil {
-		f.logger.Error("failed to query accounts: ", err)
+		logger.Error("failed to query accounts: ", err)
 		return nil, errors.InternalServerError("failed to get all balance of accounts")
 	}
 	return accounts, nil
@@ -195,7 +193,7 @@ func (f *financeRepository) GetEntryByDaterange(from time.Time, to time.Time) ([
 	`
 	err := f.db.Select(&entries, query, from, to)
 	if err != nil {
-		f.logger.Error("failed to get entry by time range: ", err)
+		logger.Error("failed to get entry by time range: ", err)
 		return nil, errors.InternalServerError("failed to get entry by time range")
 	}
 	return entries, nil

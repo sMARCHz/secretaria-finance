@@ -3,7 +3,7 @@ package config
 import (
 	"strings"
 
-	"github.com/sMARCHz/go-secretaria-finance/internal/logger"
+	"github.com/sMARCHz/go-secretaria-finance/pkg/logger"
 	"github.com/spf13/viper"
 )
 
@@ -26,7 +26,7 @@ type DatabaseConfiguration struct {
 	SSLMode  string
 }
 
-func LoadConfig(logger logger.Logger, path string) Configuration {
+func LoadConfig(path string) Configuration {
 	viper.AddConfigPath(path)
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")

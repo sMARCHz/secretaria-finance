@@ -6,21 +6,18 @@ import (
 	"github.com/sMARCHz/go-secretaria-finance/internal/adapters/driving/grpc/pb"
 	"github.com/sMARCHz/go-secretaria-finance/internal/core/dto"
 	"github.com/sMARCHz/go-secretaria-finance/internal/core/services"
-	"github.com/sMARCHz/go-secretaria-finance/internal/logger"
 	"github.com/sMARCHz/go-secretaria-finance/internal/utils"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type financeServiceServer struct {
 	service services.FinanceService
-	logger  logger.Logger
 	pb.UnimplementedFinanceServiceServer
 }
 
-func newFinanceServiceServer(service services.FinanceService, logger logger.Logger) *financeServiceServer {
+func newFinanceServiceServer(service services.FinanceService) *financeServiceServer {
 	return &financeServiceServer{
 		service: service,
-		logger:  logger,
 	}
 }
 
@@ -36,7 +33,7 @@ func (f *financeServiceServer) Withdraw(ctx context.Context, r *pb.TransactionRe
 		return &pb.TransactionResponse{
 			Status: int32(err.StatusCode),
 			Error:  err.Message,
-		}, utils.ConvertHttpErrToGRPC(err, f.logger)
+		}, utils.ConvertHttpErrToGRPC(err)
 	}
 	return response.ToProto(), nil
 }
@@ -53,7 +50,7 @@ func (f *financeServiceServer) Deposit(ctx context.Context, r *pb.TransactionReq
 		return &pb.TransactionResponse{
 			Status: int32(err.StatusCode),
 			Error:  err.Message,
-		}, utils.ConvertHttpErrToGRPC(err, f.logger)
+		}, utils.ConvertHttpErrToGRPC(err)
 	}
 	return response.ToProto(), nil
 }
@@ -70,7 +67,7 @@ func (f *financeServiceServer) Transfer(ctx context.Context, r *pb.TransferReque
 		return &pb.TransferResponse{
 			Status: int32(err.StatusCode),
 			Error:  err.Message,
-		}, utils.ConvertHttpErrToGRPC(err, f.logger)
+		}, utils.ConvertHttpErrToGRPC(err)
 	}
 	return response.ToProto(), nil
 }
@@ -87,7 +84,7 @@ func (f *financeServiceServer) GetBalance(ctx context.Context, r *emptypb.Empty)
 		return &pb.GetBalanceResponse{
 			Status: int32(err.StatusCode),
 			Error:  err.Message,
-		}, utils.ConvertHttpErrToGRPC(err, f.logger)
+		}, utils.ConvertHttpErrToGRPC(err)
 	}
 	return &pb.GetBalanceResponse{Accounts: accountsBalance}, nil
 }
@@ -102,7 +99,7 @@ func (f *financeServiceServer) GetOverviewStatement(ctx context.Context, r *pb.O
 		return &pb.OverviewStatementResponse{
 			Status: int32(err.StatusCode),
 			Error:  err.Message,
-		}, utils.ConvertHttpErrToGRPC(err, f.logger)
+		}, utils.ConvertHttpErrToGRPC(err)
 	}
 	return response.ToProto(), nil
 }
@@ -113,7 +110,7 @@ func (f *financeServiceServer) GetOverviewMonthlyStatement(ctx context.Context, 
 		return &pb.OverviewStatementResponse{
 			Status: int32(err.StatusCode),
 			Error:  err.Message,
-		}, utils.ConvertHttpErrToGRPC(err, f.logger)
+		}, utils.ConvertHttpErrToGRPC(err)
 	}
 	return response.ToProto(), nil
 }
@@ -124,7 +121,7 @@ func (f *financeServiceServer) GetOverviewAnnualStatement(ctx context.Context, r
 		return &pb.OverviewStatementResponse{
 			Status: int32(err.StatusCode),
 			Error:  err.Message,
-		}, utils.ConvertHttpErrToGRPC(err, f.logger)
+		}, utils.ConvertHttpErrToGRPC(err)
 	}
 	return response.ToProto(), nil
 }

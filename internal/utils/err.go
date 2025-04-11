@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/sMARCHz/go-secretaria-finance/internal/core/errors"
-	"github.com/sMARCHz/go-secretaria-finance/internal/logger"
+	"github.com/sMARCHz/go-secretaria-finance/pkg/logger"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -16,7 +16,7 @@ var statusCodeMap = map[int]codes.Code{
 	http.StatusInternalServerError: codes.Internal,
 }
 
-func ConvertHttpErrToGRPC(appError *errors.AppError, logger logger.Logger) error {
+func ConvertHttpErrToGRPC(appError *errors.AppError) error {
 	statusCode, present := statusCodeMap[appError.StatusCode]
 	if !present {
 		logger.Errorf("appError status code['%v'] isn't in the map", appError.StatusCode)

@@ -20,6 +20,8 @@ FROM alpine:${RUN_OS_VERSION}
 COPY --from=builder /bin/app /app
 COPY config.yaml ./
 
+RUN apk add --no-cache tzdata
+
 EXPOSE 8080
 
 ENTRYPOINT ["/app"]

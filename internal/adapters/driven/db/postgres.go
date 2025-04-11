@@ -21,35 +21,8 @@ func NewFinanceRepository(db *sqlx.DB) repository.FinanceRepository {
 	}
 }
 
-func (f *financeRepository) GetAccountByName(name string) (*domain.Account, *errors.AppError) {
-	var account domain.Account
-	err := f.db.Get(&account, "SELECT account_id, name, balance, currency, created_at FROM accounts WHERE name = $1 LIMIT 1", name)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			logger.Errorf("account not found where name='%v'", name)
-			return nil, errors.NotFoundError("account not found")
-		}
-		logger.Error("failed to get accountID: ", err)
-		return nil, errors.InternalServerError("failed to get accountID")
-	}
-	return &account, nil
-}
-
-func (f *financeRepository) GetCategoryIDByAbbrNameAndTransactionType(categoryAbbrName string, txnType repository.TransactionType) (int, *errors.AppError) {
-	var categoryID int
-	err := f.db.Get(&categoryID, "SELECT category_id FROM categories WHERE name_abbr = $1 AND transaction_type = $2 LIMIT 1", categoryAbbrName, txnType)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			logger.Errorf("category not found where abbreviation='%v', transactionType='%v'", categoryAbbrName, txnType)
-			return -1, errors.NotFoundError("category not found")
-		}
-		logger.Error("failed to get categoryID: ", err)
-		return -1, errors.InternalServerError("failed to get categoryID")
-	}
-	return categoryID, nil
-}
-
-func (f *financeRepository) Withdraw(t domain.TransactionInput) (*domain.Account, *errors.AppError) {
+// TODO: Split file
+func (f *financeRepository) Withdraw(t *domain.TransactionInput) (*domain.Account, *errors.AppError) {
 	tx, err := f.db.Begin()
 	if err != nil {
 		logger.Error("failed to begin transaction: ", err)
@@ -82,7 +55,7 @@ func (f *financeRepository) Withdraw(t domain.TransactionInput) (*domain.Account
 	return &account, nil
 }
 
-func (f *financeRepository) Deposit(t domain.TransactionInput) (*domain.Account, *errors.AppError) {
+func (f *financeRepository) Deposit(t *domain.TransactionInput) (*domain.Account, *errors.AppError) {
 	tx, err := f.db.Begin()
 	if err != nil {
 		logger.Error("failed to begin transaction: ", err)
@@ -115,7 +88,7 @@ func (f *financeRepository) Deposit(t domain.TransactionInput) (*domain.Account,
 	return &account, nil
 }
 
-func (f *financeRepository) Transfer(t domain.TransferInput) (*domain.Account, *errors.AppError) {
+func (f *financeRepository) Transfer(t *domain.TransferInput) (*domain.Account, *errors.AppError) {
 	tx, err := f.db.Begin()
 	if err != nil {
 		logger.Error("failed to begin transaction: ", err)
@@ -172,8 +145,36 @@ func (f *financeRepository) Transfer(t domain.TransferInput) (*domain.Account, *
 	return &account, nil
 }
 
-func (f *financeRepository) GetAllAccountBalance() ([]domain.Account, *errors.AppError) {
-	var accounts []domain.Account
+func (f *financeRepository) GetAccountByName(name string) (*domain.Account, *errors.AppError) {
+	var account domain.Account
+	err := f.db.Get(&account, "SELECT account_id, name, balance, currency, created_at FROM accounts WHERE name = $1 LIMIT 1", name)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			logger.Errorf("account not found where name='%v'", name)
+			return nil, errors.NotFoundError("account not found")
+		}
+		logger.Error("failed to get accountID: ", err)
+		return nil, errors.InternalServerError("failed to get accountID")
+	}
+	return &account, nil
+}
+
+func (f *financeRepository) GetCategoryIDByAbbrNameAndTransactionType(categoryAbbrName string, txnType repository.TransactionType) (int, *errors.AppError) {
+	var categoryID int
+	err := f.db.Get(&categoryID, "SELECT category_id FROM categories WHERE name_abbr = $1 AND transaction_type = $2 LIMIT 1", categoryAbbrName, txnType)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			logger.Errorf("category not found where abbreviation='%v', transactionType='%v'", categoryAbbrName, txnType)
+			return -1, errors.NotFoundError("category not found")
+		}
+		logger.Error("failed to get categoryID: ", err)
+		return -1, errors.InternalServerError("failed to get categoryID")
+	}
+	return categoryID, nil
+}
+
+func (f *financeRepository) GetAllAccountBalance() ([]*domain.Account, *errors.AppError) {
+	var accounts []*domain.Account
 	if err := f.db.Select(&accounts, "SELECT name, balance FROM accounts"); err != nil {
 		logger.Error("failed to query accounts: ", err)
 		return nil, errors.InternalServerError("failed to get all balance of accounts")
@@ -181,8 +182,8 @@ func (f *financeRepository) GetAllAccountBalance() ([]domain.Account, *errors.Ap
 	return accounts, nil
 }
 
-func (f *financeRepository) GetEntryByDaterange(from time.Time, to time.Time) ([]domain.Entry, *errors.AppError) {
-	var entries []domain.Entry
+func (f *financeRepository) GetEntryByDaterange(from time.Time, to time.Time) ([]*domain.Entry, *errors.AppError) {
+	var entries []*domain.Entry
 	query := `SELECT e.entry_id, e.account_id, e.amount, e.description, e.created_at, 
 	c.category_id "category.category_id", c.name "category.name", c.name_abbr "category.name_abbr", c.created_at "category.created_at" 
 	FROM entries e

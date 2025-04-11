@@ -15,27 +15,28 @@ type Account struct {
 	CreatedAt time.Time `db:"created_at"`
 }
 
-func (a Account) ToTransactionResponseDto() *dto.TransactionResponse {
+func (a *Account) ToTransactionResponseDto() *dto.TransactionResponse {
 	return &dto.TransactionResponse{
 		AccountName: a.Name,
 		Balance:     a.Balance,
 	}
 }
 
-func (a Account) ToTransferResponseDto() *dto.TransferResponse {
+func (a *Account) ToTransferResponseDto() *dto.TransferResponse {
 	return &dto.TransferResponse{
 		FromAccountName:    a.Name,
 		FromAccountBalance: a.Balance,
 	}
 }
 
-func (a Account) ToBalanceResponseDto() *dto.BalanceResponse {
+func (a *Account) ToBalanceResponseDto() *dto.BalanceResponse {
 	return &dto.BalanceResponse{
 		AccountName: a.Name,
 		Balance:     a.Balance,
 	}
 }
 
+// TODO: Fix this
 type Entry struct {
 	EntryID     int            `db:"entry_id"`
 	AccountID   int            `db:"account_id"`

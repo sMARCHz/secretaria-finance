@@ -28,6 +28,7 @@ func NewFinanceService(repo repository.FinanceRepository) FinanceService {
 	return &financeService{repo}
 }
 
+// TODO: Change request to pointer
 func (f *financeService) Withdraw(req dto.TransactionRequest) (*dto.TransactionResponse, *errors.AppError) {
 	categoryID, err := f.repository.GetCategoryIDByAbbrNameAndTransactionType(req.Category, repository.TransactionTypeWithdraw)
 	if err != nil {
@@ -43,7 +44,7 @@ func (f *financeService) Withdraw(req dto.TransactionRequest) (*dto.TransactionR
 		return nil, errors.UnprocessableEntityServerError("balance can't be less than the withdrawal amount")
 	}
 
-	transaction := domain.TransactionInput{
+	transaction := &domain.TransactionInput{
 		AccountID:   account.AccountID,
 		CategoryID:  categoryID,
 		Description: req.Description,
@@ -68,7 +69,7 @@ func (f *financeService) Deposit(req dto.TransactionRequest) (*dto.TransactionRe
 		return nil, err
 	}
 
-	transaction := domain.TransactionInput{
+	transaction := &domain.TransactionInput{
 		AccountID:   account.AccountID,
 		CategoryID:  categoryID,
 		Description: req.Description,
@@ -97,7 +98,7 @@ func (f *financeService) Transfer(req dto.TransferRequest) (*dto.TransferRespons
 		return nil, errors.UnprocessableEntityServerError("transferer's balance can't be less than the transfer amount")
 	}
 
-	transfer := domain.TransferInput{
+	transfer := &domain.TransferInput{
 		FromAccountID: fromAccount.AccountID,
 		ToAccountID:   toAccount.AccountID,
 		Amount:        req.Amount,
@@ -128,7 +129,7 @@ func (f *financeService) GetBalance() ([]dto.BalanceResponse, *errors.AppError) 
 func (f *financeService) GetOverviewStatement(req dto.GetOverviewStatementRequest) (*dto.GetOverviewStatementResponse, *errors.AppError) {
 	loc, err := time.LoadLocation("Asia/Bangkok")
 	if err != nil {
-		logger.Error("failed to load time location")
+		logger.Error("failed to load time location") // TODO: add error in all log
 		return nil, errors.InternalServerError("failed to load time location")
 	}
 
@@ -144,34 +145,35 @@ func (f *financeService) GetOverviewStatement(req dto.GetOverviewStatementReques
 	profit := 0.0
 	totalRevenue := 0.0
 	totalExpense := 0.0
-	statement := map[string][]domain.Entry{
+	statements := map[string][]*domain.Entry{
 		"revenue": {},
 		"expense": {},
 	}
-	for _, v := range entries {
-		profit += v.Amount
-		if v.Amount > 0 {
-			totalRevenue += v.Amount
-			statement["revenue"] = append(statement["revenue"], v)
+	for _, entry := range entries {
+		profit += entry.Amount
+		if entry.Amount > 0 {
+			totalRevenue += entry.Amount
+			statements["revenue"] = append(statements["revenue"], entry)
 		} else {
-			v.Amount = -v.Amount
-			totalExpense += v.Amount
-			statement["expense"] = append(statement["expense"], v)
+			entry.Amount = -entry.Amount // Make it positive for displaying amount
+			totalExpense += entry.Amount
+			statements["expense"] = append(statements["expense"], entry)
 		}
 	}
 
 	// group entries by category
-	revenue := dto.OverviewStatementSection{
+	revenue := &dto.OverviewStatementSection{
 		Total: totalRevenue,
 	}
-	expense := dto.OverviewStatementSection{
+	expense := &dto.OverviewStatementSection{
 		Total: totalExpense,
 	}
-	for k, entries := range statement {
-		categorizedEntry := f.groupEntriesByCategory(entries)
-		if k == "revenue" {
+	for entryType, entries := range statements {
+		categorizedEntry := f.sumByCategory(entries)
+		switch entryType {
+		case "revenue":
 			revenue.Entries = categorizedEntry
-		} else if k == "expense" {
+		case "expense":
 			expense.Entries = categorizedEntry
 		}
 	}
@@ -183,20 +185,22 @@ func (f *financeService) GetOverviewStatement(req dto.GetOverviewStatementReques
 	}, nil
 }
 
-func (*financeService) groupEntriesByCategory(entries []domain.Entry) []dto.CategorizedEntry {
-	m := make(map[string]dto.CategorizedEntry)
-	for _, e := range entries {
-		categorizedEntry, present := m[e.Category.Name]
-		if present {
-			categorizedEntry.Amount += e.Amount
-			m[e.Category.Name] = categorizedEntry
+func (*financeService) sumByCategory(entries []*domain.Entry) []*dto.CategorizedEntry {
+	summary := make(map[string]*dto.CategorizedEntry)
+	for _, entry := range entries {
+		categoryName := entry.Category.Name
+		if categorizedEntry, exist := summary[categoryName]; exist {
+			categorizedEntry.Amount += entry.Amount // TODO: Fix this naming
 		} else {
-			m[e.Category.Name] = dto.CategorizedEntry{Category: e.Category.Name, Amount: e.Amount}
+			summary[categoryName] = &dto.CategorizedEntry{
+				Category: categoryName,
+				Amount:   entry.Amount,
+			}
 		}
 	}
 
-	categorizedEntries := make([]dto.CategorizedEntry, 0)
-	for _, v := range m {
+	categorizedEntries := make([]*dto.CategorizedEntry, 0)
+	for _, v := range summary {
 		categorizedEntries = append(categorizedEntries, v)
 	}
 

@@ -19,13 +19,12 @@ type TransactionResponse struct {
 	Balance     float64 `json:"balance"`
 }
 
-func (t TransactionResponse) ToProto() *pb.TransactionResponse {
-	response := pb.TransactionResponse{
+func (t *TransactionResponse) ToProto() *pb.TransactionResponse {
+	return &pb.TransactionResponse{
 		Status:      http.StatusOK,
 		AccountName: t.AccountName,
 		Balance:     t.Balance,
 	}
-	return &response
 }
 
 type TransferRequest struct {
@@ -40,13 +39,12 @@ type TransferResponse struct {
 	FromAccountBalance float64 `json:"balance"`
 }
 
-func (t TransferResponse) ToProto() *pb.TransferResponse {
-	response := pb.TransferResponse{
+func (t *TransferResponse) ToProto() *pb.TransferResponse {
+	return &pb.TransferResponse{
 		Status:          http.StatusOK,
 		FromAccountName: t.FromAccountName,
 		Balance:         t.FromAccountBalance,
 	}
-	return &response
 }
 
 type BalanceResponse struct {
@@ -54,12 +52,11 @@ type BalanceResponse struct {
 	Balance     float64 `json:"balance"`
 }
 
-func (b BalanceResponse) ToProto() *pb.AccountBalance {
-	response := pb.AccountBalance{
+func (b *BalanceResponse) ToProto() *pb.AccountBalance {
+	return &pb.AccountBalance{
 		AccountName: b.AccountName,
 		Balance:     b.Balance,
 	}
-	return &response
 }
 
 type GetOverviewStatementRequest struct {
@@ -68,12 +65,12 @@ type GetOverviewStatementRequest struct {
 }
 
 type GetOverviewStatementResponse struct {
-	Revenue OverviewStatementSection
-	Expense OverviewStatementSection
+	Revenue *OverviewStatementSection
+	Expense *OverviewStatementSection
 	Profit  float64
 }
 
-func (g GetOverviewStatementResponse) ToProto() *pb.OverviewStatementResponse {
+func (g *GetOverviewStatementResponse) ToProto() *pb.OverviewStatementResponse {
 	return &pb.OverviewStatementResponse{
 		Revenue: g.Revenue.ToProto(),
 		Expense: g.Expense.ToProto(),
@@ -83,10 +80,10 @@ func (g GetOverviewStatementResponse) ToProto() *pb.OverviewStatementResponse {
 
 type OverviewStatementSection struct {
 	Total   float64
-	Entries []CategorizedEntry
+	Entries []*CategorizedEntry
 }
 
-func (o OverviewStatementSection) ToProto() *pb.OverviewStatementSection {
+func (o *OverviewStatementSection) ToProto() *pb.OverviewStatementSection {
 	entries := make([]*pb.CategorizedEntry, len(o.Entries))
 	for i, v := range o.Entries {
 		entries[i] = v.ToProto()
@@ -97,12 +94,13 @@ func (o OverviewStatementSection) ToProto() *pb.OverviewStatementSection {
 	}
 }
 
+// TODO: Fix name
 type CategorizedEntry struct {
 	Category string
 	Amount   float64
 }
 
-func (c CategorizedEntry) ToProto() *pb.CategorizedEntry {
+func (c *CategorizedEntry) ToProto() *pb.CategorizedEntry {
 	return &pb.CategorizedEntry{
 		Category: c.Category,
 		Amount:   c.Amount,

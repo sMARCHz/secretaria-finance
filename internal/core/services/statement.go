@@ -51,9 +51,9 @@ func (f *financeService) GetOverviewStatement(req *dto.GetOverviewStatementReque
 	expense := &dto.OverviewStatementSection{
 		Total: totalExpense,
 	}
-	for entryType, entries := range statements {
+	for statementType, entries := range statements {
 		categorizedEntry := sumByCategory(entries)
-		switch entryType {
+		switch statementType {
 		case "revenue":
 			revenue.Entries = categorizedEntry
 		case "expense":
@@ -82,10 +82,10 @@ func sumByCategory(entries []*domain.Entry) []*dto.CategorizedEntry {
 		}
 	}
 
-	categorizedEntries := make([]*dto.CategorizedEntry, 0)
+	res := make([]*dto.CategorizedEntry, 0)
 	for _, v := range summary {
-		categorizedEntries = append(categorizedEntries, v)
+		res = append(res, v)
 	}
 
-	return categorizedEntries
+	return res
 }

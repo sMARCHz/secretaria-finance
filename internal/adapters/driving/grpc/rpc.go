@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/sMARCHz/go-secretaria-finance/internal/adapters/driving/grpc/pb"
 	"github.com/sMARCHz/go-secretaria-finance/internal/core/dto"
@@ -21,6 +22,7 @@ func newFinanceServiceServer(service services.FinanceService) *financeServiceSer
 	}
 }
 
+// TODO: Add request parser
 func (f *financeServiceServer) Withdraw(ctx context.Context, r *pb.TransactionRequest) (*pb.TransactionResponse, error) {
 	req := &dto.TransactionRequest{
 		AccountName: r.AccountName,
@@ -87,8 +89,10 @@ func (f *financeServiceServer) GetBalance(ctx context.Context, r *emptypb.Empty)
 		}, utils.ConvertHttpErrToGRPC(err)
 	}
 
-	// TODO: Fix this
-	return &pb.GetBalanceResponse{Accounts: accountsBalance}, nil
+	return &pb.GetBalanceResponse{
+		Status:   http.StatusOK,
+		Accounts: accountsBalance,
+	}, nil
 }
 
 func (f *financeServiceServer) GetOverviewStatement(ctx context.Context, r *pb.OverviewStatementRequest) (*pb.OverviewStatementResponse, error) {

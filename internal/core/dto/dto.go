@@ -72,6 +72,7 @@ type GetOverviewStatementResponse struct {
 
 func (g *GetOverviewStatementResponse) ToProto() *pb.OverviewStatementResponse {
 	return &pb.OverviewStatementResponse{
+		Status:  http.StatusOK,
 		Revenue: g.Revenue.ToProto(),
 		Expense: g.Expense.ToProto(),
 		Profit:  g.Profit,

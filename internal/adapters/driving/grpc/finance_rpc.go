@@ -11,8 +11,8 @@ import (
 )
 
 type financeServiceServer struct {
-	service services.FinanceService
 	pb.UnimplementedFinanceServiceServer
+	service services.FinanceService
 }
 
 func newFinanceServiceServer(service services.FinanceService) *financeServiceServer {

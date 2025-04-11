@@ -19,27 +19,23 @@ type GRPCServer struct {
 }
 
 func NewGRPCServer(db *sqlx.DB) (GRPCServer, func()) {
-	opts := []grpc.ServerOption{}
-	grpcServer := grpc.NewServer(opts...)
+	server := grpc.NewServer(grpc.EmptyServerOption{})
 	return GRPCServer{
-		server:   grpcServer,
+		server:   server,
 		database: db,
-	}, grpcServer.GracefulStop
+	}, server.GracefulStop
 }
 
 func (g GRPCServer) Start() {
-	// Wiring
-	fRepo := db.NewFinanceRepository(g.database)
-	fService := services.NewFinanceService(fRepo)
-	fServer := newFinanceServiceServer(fService)
-
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%v", config.Get().App.Port))
 	if err != nil {
 		logger.Fatal("failed to listen: ", err)
 	}
 
 	// Register service to grpc server
-	pb.RegisterFinanceServiceServer(g.server, fServer)
+	repo := db.NewFinanceRepository(g.database)
+	service := services.NewFinanceService(repo)
+	pb.RegisterFinanceServiceServer(g.server, newFinanceServiceServer(service))
 
 	// Start server
 	logger.Infof("Starting gRPC server at :%v...", config.Get().App.Port)

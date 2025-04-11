@@ -27,14 +27,14 @@ func main() {
 	stopCh := make(chan os.Signal, 1)
 	signal.Notify(stopCh, syscall.SIGINT, syscall.SIGTERM)
 
-	grpcServer, shutdown := grpc.NewGRPCServer(db)
+	server, shutdown := grpc.NewGRPCServer(db)
 	go func() {
-		grpcServer.Start()
+		server.Start()
 	}()
 
 	// Shutdown server
-	s := <-stopCh
-	logger.Infof("Got signal '%v', attempting graceful shutdown", s)
+	sig := <-stopCh
+	logger.Infof("Got signal '%v', attempting graceful shutdown", sig)
 	shutdown()
 	closeDBConnection()
 	logger.Info("Gracefully shutting down...")
@@ -42,11 +42,13 @@ func main() {
 
 func createDBConnection() (*sqlx.DB, func()) {
 	cfg := config.Get().DB
-	datasourceName := fmt.Sprintf("postgresql://%v:%v@%v:%v/%v?sslmode=%v", cfg.Username, cfg.Password, cfg.Host, cfg.Port, cfg.DBName, cfg.SSLMode)
-	db, err := sqlx.Open(cfg.Driver, datasourceName)
+	dataSource := fmt.Sprintf("postgresql://%v:%v@%v:%v/%v?sslmode=%v", cfg.Username, cfg.Password, cfg.Host, cfg.Port, cfg.DBName, cfg.SSLMode)
+
+	db, err := sqlx.Open(cfg.Driver, dataSource)
 	if err != nil {
 		logger.Fatal("cannot connect to database: ", err)
 	}
+
 	return db, func() {
 		err := db.Close()
 		if err != nil {

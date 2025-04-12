@@ -12,7 +12,7 @@ import (
 func (f *financeService) GetOverviewStatement(req *dto.GetOverviewStatementRequest) (*dto.GetOverviewStatementResponse, *errors.AppError) {
 	loc, err := time.LoadLocation("Asia/Bangkok")
 	if err != nil {
-		logger.Error("failed to load time location") // TODO: add error in all log
+		logger.Error("failed to load time location: ", err)
 		return nil, errors.InternalServerError("failed to load time location")
 	}
 
@@ -38,7 +38,7 @@ func (f *financeService) GetOverviewStatement(req *dto.GetOverviewStatementReque
 			totalRevenue += entry.Amount
 			statements["revenue"] = append(statements["revenue"], entry)
 		} else {
-			entry.Amount = -entry.Amount // Make it positive for displaying amount
+			entry.Amount = -entry.Amount // Make it positive for displaying purpose
 			totalExpense += entry.Amount
 			statements["expense"] = append(statements["expense"], entry)
 		}

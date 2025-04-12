@@ -35,6 +35,7 @@ func (f *financeRepository) Deposit(t *domain.TransactionInput) (*domain.Account
 		logger.Error("failed to commit transaction: ", err)
 		return nil, errors.InternalServerError("failed to commit transaction")
 	}
+
 	logger.Infof("successfully deposit ฿%v to accountID=%v", t.Amount, t.AccountID)
 	return &account, nil
 }

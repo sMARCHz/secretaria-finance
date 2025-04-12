@@ -59,6 +59,7 @@ func (f *financeRepository) Transfer(t *domain.TransferInput) (*domain.Account, 
 		logger.Error("failed to commit transaction: ", err)
 		return nil, errors.InternalServerError("failed to commit transaction")
 	}
+
 	logger.Infof("successfully transfer ฿%v from accountID=%v to accountID=%v", t.Amount, t.FromAccountID, t.ToAccountID)
 	return &account, nil
 }

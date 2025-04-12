@@ -30,6 +30,7 @@ func (f *financeServiceServer) Withdraw(ctx context.Context, r *pb.TransactionRe
 		Description: r.Description,
 		Amount:      r.Amount,
 	}
+
 	response, err := f.service.Withdraw(req)
 	if err != nil {
 		return &pb.TransactionResponse{
@@ -37,6 +38,7 @@ func (f *financeServiceServer) Withdraw(ctx context.Context, r *pb.TransactionRe
 			Error:  err.Message,
 		}, utils.ConvertHttpErrToGRPC(err)
 	}
+
 	return response.ToProto(), nil
 }
 
@@ -47,6 +49,7 @@ func (f *financeServiceServer) Deposit(ctx context.Context, r *pb.TransactionReq
 		Description: r.Description,
 		Amount:      r.Amount,
 	}
+
 	response, err := f.service.Deposit(req)
 	if err != nil {
 		return &pb.TransactionResponse{
@@ -54,6 +57,7 @@ func (f *financeServiceServer) Deposit(ctx context.Context, r *pb.TransactionReq
 			Error:  err.Message,
 		}, utils.ConvertHttpErrToGRPC(err)
 	}
+
 	return response.ToProto(), nil
 }
 
@@ -64,6 +68,7 @@ func (f *financeServiceServer) Transfer(ctx context.Context, r *pb.TransferReque
 		Description:     r.Description,
 		Amount:          r.Amount,
 	}
+
 	response, err := f.service.Transfer(req)
 	if err != nil {
 		return &pb.TransferResponse{
@@ -71,17 +76,12 @@ func (f *financeServiceServer) Transfer(ctx context.Context, r *pb.TransferReque
 			Error:  err.Message,
 		}, utils.ConvertHttpErrToGRPC(err)
 	}
+
 	return response.ToProto(), nil
 }
 
 func (f *financeServiceServer) GetBalance(ctx context.Context, r *emptypb.Empty) (*pb.GetBalanceResponse, error) {
 	response, err := f.service.GetBalance()
-
-	accountsBalance := make([]*pb.AccountBalance, len(response))
-	for i, v := range response {
-		accountsBalance[i] = v.ToProto()
-	}
-
 	if err != nil {
 		return &pb.GetBalanceResponse{
 			Status: int32(err.StatusCode),
@@ -89,6 +89,10 @@ func (f *financeServiceServer) GetBalance(ctx context.Context, r *emptypb.Empty)
 		}, utils.ConvertHttpErrToGRPC(err)
 	}
 
+	accountsBalance := make([]*pb.AccountBalance, len(response))
+	for i, v := range response {
+		accountsBalance[i] = v.ToProto()
+	}
 	return &pb.GetBalanceResponse{
 		Status:   http.StatusOK,
 		Accounts: accountsBalance,
@@ -100,6 +104,7 @@ func (f *financeServiceServer) GetOverviewStatement(ctx context.Context, r *pb.O
 		From: r.From.AsTime(),
 		To:   r.To.AsTime(),
 	}
+
 	response, err := f.service.GetOverviewStatement(req)
 	if err != nil {
 		return &pb.OverviewStatementResponse{
@@ -107,6 +112,7 @@ func (f *financeServiceServer) GetOverviewStatement(ctx context.Context, r *pb.O
 			Error:  err.Message,
 		}, utils.ConvertHttpErrToGRPC(err)
 	}
+
 	return response.ToProto(), nil
 }
 

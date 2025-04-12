@@ -19,7 +19,7 @@ type FinanceRepository interface {
 	Deposit(*domain.TransactionInput) (*domain.Account, *errors.AppError)
 	Transfer(*domain.TransferInput) (*domain.Account, *errors.AppError)
 	GetAllAccountBalance() ([]*domain.Account, *errors.AppError)
-	GetEntryByDaterange(from time.Time, to time.Time) ([]*domain.Entry, *errors.AppError)
+	GetEntryByDaterange(from time.Time, to time.Time) ([]*domain.EntryWithCategory, *errors.AppError)
 
 	GetAccountByName(name string) (*domain.Account, *errors.AppError)
 	GetCategoryByAbbrNameAndTransactionType(abbrName string, txnType TransactionType) (*domain.Category, *errors.AppError)

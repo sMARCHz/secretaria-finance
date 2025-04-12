@@ -28,7 +28,7 @@ func (f *financeService) GetOverviewStatement(req *dto.GetOverviewStatementReque
 	profit := 0.0
 	totalRevenue := 0.0
 	totalExpense := 0.0
-	statements := map[string][]*domain.Entry{
+	statements := map[string][]*domain.EntryWithCategory{
 		"revenue": {},
 		"expense": {},
 	}
@@ -68,16 +68,15 @@ func (f *financeService) GetOverviewStatement(req *dto.GetOverviewStatementReque
 	}, nil
 }
 
-func sumByCategory(entries []*domain.Entry) []*dto.CategorizedEntry {
-	summary := make(map[string]*dto.CategorizedEntry)
+func sumByCategory(entries []*domain.EntryWithCategory) []*dto.CategorizedEntry {
+	summary := make(map[int]*dto.CategorizedEntry)
 	for _, entry := range entries {
-		categoryName := entry.Category.Name
-		if categorizedEntry, exist := summary[categoryName]; exist {
+		if categorizedEntry, exist := summary[entry.CategoryID]; exist {
 			categorizedEntry.Amount += entry.Amount
 		} else {
-			summary[categoryName] = &dto.CategorizedEntry{
-				Category: categoryName,
-				Amount:   entry.Amount,
+			summary[entry.CategoryID] = &dto.CategorizedEntry{
+				CategoryName: entry.Name,
+				Amount:       entry.Amount,
 			}
 		}
 	}

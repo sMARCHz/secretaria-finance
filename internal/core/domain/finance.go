@@ -43,7 +43,6 @@ type Entry struct {
 	Amount      float64        `db:"amount"`
 	Description sql.NullString `db:"description"`
 	CreatedAt   time.Time      `db:"created_at"`
-	Category    `db:"category"`
 }
 
 type Category struct {
@@ -52,6 +51,11 @@ type Category struct {
 	NameAbbriviation string    `db:"name_abbr"`
 	TransactionType  string    `db:"transaction_type"`
 	CreatedAt        time.Time `db:"created_at"`
+}
+
+type EntryWithCategory struct {
+	Entry    `db:"entry"`
+	Category `db:"category"`
 }
 
 type Transfer struct {

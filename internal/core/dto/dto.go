@@ -97,13 +97,13 @@ func (o *OverviewStatementSection) ToProto() *pb.OverviewStatementSection {
 
 // TODO: Fix name
 type CategorizedEntry struct {
-	Category string
-	Amount   float64
+	CategoryName string
+	Amount       float64
 }
 
 func (c *CategorizedEntry) ToProto() *pb.CategorizedEntry {
 	return &pb.CategorizedEntry{
-		Category: c.Category,
+		Category: c.CategoryName,
 		Amount:   c.Amount,
 	}
 }

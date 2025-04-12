@@ -8,7 +8,7 @@ import (
 )
 
 func (f *financeService) Withdraw(req *dto.TransactionRequest) (*dto.TransactionResponse, *errors.AppError) {
-	categoryID, err := f.repository.GetCategoryIDByAbbrNameAndTransactionType(req.Category, repository.TransactionTypeWithdraw)
+	categoryID, err := f.repository.GetCategoryIDByAbbrNameAndTransactionType(req.Category, repository.TransactionTypeWithdraw) // TODO: Add unique index
 	if err != nil {
 		return nil, err
 	}

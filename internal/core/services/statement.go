@@ -24,7 +24,39 @@ func (f *financeService) GetOverviewStatement(req *dto.GetOverviewStatementReque
 		return nil, appErr
 	}
 
-	// calculate profit and split the entries 2 groups(revenue,expense)
+	// Calculate profit and split the entries 2 groups (revenue,expense)
+	financialSummary := calculateFinancialSummary(entries)
+	res := &dto.GetOverviewStatementResponse{
+		Profit: financialSummary.profit,
+		Revenue: &dto.OverviewStatementSection{
+			Total: financialSummary.totalRevenue,
+		},
+		Expense: &dto.OverviewStatementSection{
+			Total: financialSummary.totalExpense,
+		},
+	}
+
+	for statementType, entries := range financialSummary.statements {
+		categorizedEntry := sumByCategory(entries)
+		switch statementType {
+		case "revenue":
+			res.Revenue.Entries = categorizedEntry
+		case "expense":
+			res.Expense.Entries = categorizedEntry
+		}
+	}
+
+	return res, nil
+}
+
+type financialSummary struct {
+	profit       float64
+	totalRevenue float64
+	totalExpense float64
+	statements   map[string][]*domain.EntryWithCategory
+}
+
+func calculateFinancialSummary(entries []*domain.EntryWithCategory) *financialSummary {
 	profit := 0.0
 	totalRevenue := 0.0
 	totalExpense := 0.0
@@ -32,6 +64,7 @@ func (f *financeService) GetOverviewStatement(req *dto.GetOverviewStatementReque
 		"revenue": {},
 		"expense": {},
 	}
+
 	for _, entry := range entries {
 		profit += entry.Amount
 		if entry.Amount > 0 {
@@ -44,28 +77,12 @@ func (f *financeService) GetOverviewStatement(req *dto.GetOverviewStatementReque
 		}
 	}
 
-	// group entries by category
-	revenue := &dto.OverviewStatementSection{
-		Total: totalRevenue,
+	return &financialSummary{
+		profit:       profit,
+		totalRevenue: totalRevenue,
+		totalExpense: totalExpense,
+		statements:   statements,
 	}
-	expense := &dto.OverviewStatementSection{
-		Total: totalExpense,
-	}
-	for statementType, entries := range statements {
-		categorizedEntry := sumByCategory(entries)
-		switch statementType {
-		case "revenue":
-			revenue.Entries = categorizedEntry
-		case "expense":
-			expense.Entries = categorizedEntry
-		}
-	}
-
-	return &dto.GetOverviewStatementResponse{
-		Profit:  profit,
-		Revenue: revenue,
-		Expense: expense,
-	}, nil
 }
 
 func sumByCategory(entries []*domain.EntryWithCategory) []*dto.CategorizedEntry {

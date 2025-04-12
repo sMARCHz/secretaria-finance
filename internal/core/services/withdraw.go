@@ -5,10 +5,11 @@ import (
 	"github.com/sMARCHz/go-secretaria-finance/internal/core/dto"
 	"github.com/sMARCHz/go-secretaria-finance/internal/core/errors"
 	"github.com/sMARCHz/go-secretaria-finance/internal/core/repository"
+	"github.com/sMARCHz/go-secretaria-finance/pkg/logger"
 )
 
 func (f *financeService) Withdraw(req *dto.TransactionRequest) (*dto.TransactionResponse, *errors.AppError) {
-	categoryID, err := f.repository.GetCategoryIDByAbbrNameAndTransactionType(req.Category, repository.TransactionTypeWithdraw) // TODO: Add unique index
+	category, err := f.repository.GetCategoryByAbbrNameAndTransactionType(req.Category, repository.TransactionTypeWithdraw)
 	if err != nil {
 		return nil, err
 	}
@@ -19,12 +20,13 @@ func (f *financeService) Withdraw(req *dto.TransactionRequest) (*dto.Transaction
 	}
 
 	if account.Balance < req.Amount {
-		return nil, errors.UnprocessableEntityServerError("balance can't be less than the withdrawal amount")
+		logger.Error("balance cannot be less than the withdrawal amount")
+		return nil, errors.UnprocessableEntityServerError("balance cannot be less than the withdrawal amount")
 	}
 
 	transaction := &domain.TransactionInput{
 		AccountID:   account.AccountID,
-		CategoryID:  categoryID,
+		CategoryID:  category.CategoryID,
 		Description: req.Description,
 		Amount:      -req.Amount,
 	}

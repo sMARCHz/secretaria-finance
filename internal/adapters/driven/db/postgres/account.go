@@ -9,13 +9,16 @@ import (
 )
 
 func (f *financeRepository) GetAccountByName(name string) (*domain.Account, *errors.AppError) {
-	var account domain.Account
-	err := f.db.Get(&account, "SELECT account_id, name, balance, currency, created_at FROM accounts WHERE name = $1 LIMIT 1", name)
+	account := domain.Account{
+		Name: name,
+	}
+	err := f.db.Get(&account, "SELECT account_id, balance, currency, created_at FROM accounts WHERE name = $1 LIMIT 1", name) // TODO: Add unique index
 	if err != nil {
 		if err == sql.ErrNoRows {
 			logger.Errorf("account not found where name='%v'", name)
 			return nil, errors.NotFoundError("account not found")
 		}
+
 		logger.Error("failed to get accountID: ", err)
 		return nil, errors.InternalServerError("failed to get accountID")
 	}

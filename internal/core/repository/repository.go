@@ -22,5 +22,5 @@ type FinanceRepository interface {
 	GetEntryByDaterange(from time.Time, to time.Time) ([]*domain.Entry, *errors.AppError)
 
 	GetAccountByName(name string) (*domain.Account, *errors.AppError)
-	GetCategoryIDByAbbrNameAndTransactionType(abbrName string, txnType TransactionType) (int, *errors.AppError)
+	GetCategoryByAbbrNameAndTransactionType(abbrName string, txnType TransactionType) (*domain.Category, *errors.AppError)
 }

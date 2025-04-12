@@ -8,7 +8,7 @@ import (
 )
 
 func (f *financeService) Deposit(req *dto.TransactionRequest) (*dto.TransactionResponse, *errors.AppError) {
-	categoryID, err := f.repository.GetCategoryIDByAbbrNameAndTransactionType(req.Category, repository.TransactionTypeDeposit)
+	category, err := f.repository.GetCategoryByAbbrNameAndTransactionType(req.Category, repository.TransactionTypeDeposit)
 	if err != nil {
 		return nil, err
 	}
@@ -20,7 +20,7 @@ func (f *financeService) Deposit(req *dto.TransactionRequest) (*dto.TransactionR
 
 	transaction := &domain.TransactionInput{
 		AccountID:   account.AccountID,
-		CategoryID:  categoryID,
+		CategoryID:  category.CategoryID,
 		Description: req.Description,
 		Amount:      req.Amount,
 	}

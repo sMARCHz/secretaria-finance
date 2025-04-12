@@ -20,6 +20,7 @@ func (f *financeRepository) Withdraw(t *domain.TransactionInput) (*domain.Accoun
 		logger.Error("failed to insert entries: ", err)
 		return nil, errors.InternalServerError("failed to insert entries")
 	}
+
 	// Update the account's balance
 	var account domain.Account
 	err = tx.QueryRow("UPDATE accounts SET balance = balance + $1 WHERE account_id = $2 RETURNING name, balance, currency, created_at", t.Amount, t.AccountID).Scan(&account.Name, &account.Balance, &account.Currency, &account.CreatedAt)
@@ -35,6 +36,7 @@ func (f *financeRepository) Withdraw(t *domain.TransactionInput) (*domain.Accoun
 		logger.Error("failed to commit transaction: ", err)
 		return nil, errors.InternalServerError("failed to commit transaction")
 	}
+
 	logger.Infof("successfully withdraw ฿%v to accountID=%v", -t.Amount, t.AccountID)
 	return &account, nil
 }

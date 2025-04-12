@@ -50,6 +50,7 @@ type Category struct {
 	CategoryID       int       `db:"category_id"`
 	Name             string    `db:"name"`
 	NameAbbriviation string    `db:"name_abbr"`
+	TransactionType  string    `db:"transaction_type"`
 	CreatedAt        time.Time `db:"created_at"`
 }
 

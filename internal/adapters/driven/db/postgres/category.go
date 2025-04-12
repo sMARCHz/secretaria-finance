@@ -3,21 +3,26 @@ package postgres
 import (
 	"database/sql"
 
+	"github.com/sMARCHz/go-secretaria-finance/internal/core/domain"
 	"github.com/sMARCHz/go-secretaria-finance/internal/core/errors"
 	"github.com/sMARCHz/go-secretaria-finance/internal/core/repository"
 	"github.com/sMARCHz/go-secretaria-finance/pkg/logger"
 )
 
-func (f *financeRepository) GetCategoryIDByAbbrNameAndTransactionType(categoryAbbrName string, txnType repository.TransactionType) (int, *errors.AppError) {
-	var categoryID int
-	err := f.db.Get(&categoryID, "SELECT category_id FROM categories WHERE name_abbr = $1 AND transaction_type = $2 LIMIT 1", categoryAbbrName, txnType)
+func (f *financeRepository) GetCategoryByAbbrNameAndTransactionType(categoryAbbrName string, txnType repository.TransactionType) (*domain.Category, *errors.AppError) {
+	category := domain.Category{
+		NameAbbriviation: categoryAbbrName,
+		TransactionType:  string(txnType),
+	}
+	err := f.db.Get(&category, "SELECT category_id, name, created_at FROM categories WHERE name_abbr = $1 AND transaction_type = $2 LIMIT 1", categoryAbbrName, txnType) // TODO: Add unique index
 	if err != nil {
 		if err == sql.ErrNoRows {
 			logger.Errorf("category not found where abbreviation='%v', transactionType='%v'", categoryAbbrName, txnType)
-			return -1, errors.NotFoundError("category not found")
+			return nil, errors.NotFoundError("category not found")
 		}
-		logger.Error("failed to get categoryID: ", err)
-		return -1, errors.InternalServerError("failed to get categoryID")
+
+		logger.Error("failed to get category: ", err)
+		return nil, errors.InternalServerError("failed to get category")
 	}
-	return categoryID, nil
+	return &category, nil
 }

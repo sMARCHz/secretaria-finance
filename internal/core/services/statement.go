@@ -17,7 +17,7 @@ func (f *financeService) GetOverviewStatement(req *dto.GetOverviewStatementReque
 	}
 
 	from := time.Date(req.From.Year(), req.From.Month(), req.From.Day(), 0, 0, 0, 0, loc)
-	to := time.Date(req.To.Year(), req.To.Month(), req.To.Day(), 23, 59, 59, 0, loc)
+	to := time.Date(req.To.Year(), req.To.Month(), req.To.Day(), 23, 59, 59, 999999999, loc)
 
 	entries, appErr := f.repository.GetEntryByDaterange(from, to)
 	if appErr != nil {
@@ -73,7 +73,7 @@ func sumByCategory(entries []*domain.Entry) []*dto.CategorizedEntry {
 	for _, entry := range entries {
 		categoryName := entry.Category.Name
 		if categorizedEntry, exist := summary[categoryName]; exist {
-			categorizedEntry.Amount += entry.Amount // TODO: Fix this naming
+			categorizedEntry.Amount += entry.Amount
 		} else {
 			summary[categoryName] = &dto.CategorizedEntry{
 				Category: categoryName,

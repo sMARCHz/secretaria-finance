@@ -5,7 +5,6 @@ import (
 	"github.com/sMARCHz/go-secretaria-finance/internal/core/dto"
 	"github.com/sMARCHz/go-secretaria-finance/internal/core/errors"
 	"github.com/sMARCHz/go-secretaria-finance/internal/core/repository"
-	"github.com/sMARCHz/go-secretaria-finance/pkg/logger"
 )
 
 func (f *financeService) Withdraw(req *dto.TransactionRequest) (*dto.TransactionResponse, *errors.AppError) {
@@ -20,7 +19,6 @@ func (f *financeService) Withdraw(req *dto.TransactionRequest) (*dto.Transaction
 	}
 
 	if account.Balance < req.Amount {
-		logger.Error("balance cannot be less than the withdrawal amount")
 		return nil, errors.UnprocessableEntityServerError("balance cannot be less than the withdrawal amount")
 	}
 

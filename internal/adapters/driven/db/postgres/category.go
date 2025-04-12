@@ -17,7 +17,6 @@ func (f *financeRepository) GetCategoryByAbbrNameAndTransactionType(categoryAbbr
 	err := f.db.Get(&category, "SELECT category_id, name, created_at FROM categories WHERE name_abbr = $1 AND transaction_type = $2 LIMIT 1", categoryAbbrName, txnType) // TODO: Add unique index
 	if err != nil {
 		if err == sql.ErrNoRows {
-			logger.Errorf("category not found where abbreviation='%v', transactionType='%v'", categoryAbbrName, txnType)
 			return nil, errors.NotFoundError("category not found")
 		}
 

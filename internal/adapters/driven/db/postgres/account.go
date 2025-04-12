@@ -15,7 +15,6 @@ func (f *financeRepository) GetAccountByName(name string) (*domain.Account, *err
 	err := f.db.Get(&account, "SELECT account_id, balance, currency, created_at FROM accounts WHERE name = $1 LIMIT 1", name) // TODO: Add unique index
 	if err != nil {
 		if err == sql.ErrNoRows {
-			logger.Errorf("account not found where name='%v'", name)
 			return nil, errors.NotFoundError("account not found")
 		}
 
